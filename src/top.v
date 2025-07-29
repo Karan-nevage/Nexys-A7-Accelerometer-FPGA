@@ -1,26 +1,28 @@
 `timescale 1ns / 1ps
 
-module top(
-    input CLK100MHZ,            // nexys a7 clock
-    input ACL_MISO,             // master in
-    output ACL_MOSI,            // master out
-    output ACL_SCLK,            // spi sclk
-    output ACL_CSN,             // spi chip select
-    output [14:0] LED,          // X = LED[14:10], Y = LED[9:5], Z = LED[4:0]
-    output [6:0] SEG,           // 7 segments of display
-    output DP,                  // decimal point of display
-    output [7:0] AN             // 8 displays
-    );
-    
-    wire w_4MHz;
-    wire [14:0] acl_data;
-        
-    iclk_genr clock_generation(
+module top (
+    input  wire CLK100MHZ,            // Nexys A7 clock
+    input  wire ACL_MISO,             // Master In Slave Out
+    output wire ACL_MOSI,             // Master Out Slave In
+    output wire ACL_SCLK,             // SPI clock
+    output wire ACL_CSN,              // SPI chip select
+    output wire [14:0] LED,           // LEDs for X[14:10], Y[9:5], Z[4:0]
+    output wire [6:0] SEG,            // 7 segments of display
+    output wire DP,                   // Decimal point of display
+    output wire [7:0] AN              // 8 anodes for 7-segment display
+);
+
+    wire w_4MHz;                       // Internal 4 MHz clock wire
+    wire [14:0] acl_data;              // Internal 15-bit accelerometer data wire
+
+    // Instantiate clock generation module
+    iclk_genr clock_generation (
         .CLK100MHZ(CLK100MHZ),
         .clk_4MHz(w_4MHz)
     );
-    
-    spi_master master(
+
+    // Instantiate SPI master module
+    spi_master master (
         .iclk(w_4MHz),
         .miso(ACL_MISO),
         .sclk(ACL_SCLK),
@@ -28,8 +30,9 @@ module top(
         .cs(ACL_CSN),
         .acl_data(acl_data)
     );
-    
-    seg7_control display_control(
+
+    // Instantiate 7-segment display control module
+    seg7_control display_control (
         .CLK100MHZ(CLK100MHZ),
         .acl_data(acl_data),
         .seg(SEG),
@@ -37,8 +40,9 @@ module top(
         .an(AN)
     );
 
-    assign LED[14:10] = acl_data[14:10];    // 5 bits of x data from 10 to 14
-    assign LED[9:5]   = acl_data[9:5];      // 5 bits of y data from 9 to 5
-    assign LED[4:0]   = acl_data[4:0];      // 5 bits of z data from 0 to 4
-    
+    // Assign accelerometer data to LEDs
+    assign LED[14:10] = acl_data[14:10];    // 5 bits of X data from 14 to 10
+    assign LED[9:5]   = acl_data[9:5];      // 5 bits of Y data from 9 to 5
+    assign LED[4:0]   = acl_data[4:0];      // 5 bits of Z data from 4 to 0
+
 endmodule
